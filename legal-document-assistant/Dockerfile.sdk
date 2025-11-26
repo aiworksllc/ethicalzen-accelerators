@@ -1,0 +1,22 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY sdk/ ./sdk/
+
+WORKDIR /app/sdk
+RUN npm ci
+RUN npm run build
+RUN npm link
+
+WORKDIR /app/accelerator
+COPY accelerators-internal/legal-document-assistant/package*.json ./
+RUN npm install
+RUN npm link @ethicalzen/sdk
+
+COPY accelerators-internal/legal-document-assistant/ ./
+
+EXPOSE 3000
+
+CMD ["node", "app/server-sdk.js"]

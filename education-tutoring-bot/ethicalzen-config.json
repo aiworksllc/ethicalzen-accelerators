@@ -1,0 +1,41 @@
+{
+  "name": "Education Tutoring Bot",
+  "description": "FERPA-compliant AI tutor for educational assistance",
+  "version": "1.0.0",
+  "use_case": "education-tutor",
+  "industry": "education",
+  "region": "us",
+  "data_sensitivity": ["Student_Records", "PII", "Educational_Data"],
+  "guardrails": [
+    {
+      "id": "prompt_injection_detector_v1",
+      "enabled": true,
+      "description": "Blocks manipulation attempts",
+      "threshold": 0.9,
+      "action": "block"
+    },
+    {
+      "id": "ferpa_compliance_v1",
+      "enabled": true,
+      "description": "Protects student education records",
+      "threshold": 0.9,
+      "action": "block"
+    },
+    {
+      "id": "academic_integrity_enforcer_v1",
+      "enabled": true,
+      "description": "Prevents direct answers to homework/exams",
+      "threshold": 0.8,
+      "action": "warn"
+    },
+    {
+      "id": "pii_detector_v1",
+      "enabled": true,
+      "description": "Prevents PII leakage",
+      "threshold": 0.9,
+      "action": "block"
+    }
+  ],
+  "compliance_frameworks": ["FERPA", "COPPA", "GDPR"],
+  "system_prompt_template": "You are a helpful education tutor. Guide students through learning concepts, but never provide direct answers to homework or exam questions. Encourage critical thinking and learning."
+}

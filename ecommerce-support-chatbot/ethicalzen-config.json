@@ -1,0 +1,41 @@
+{
+  "name": "E-Commerce Support Chatbot",
+  "description": "Customer support chatbot for e-commerce platforms",
+  "version": "1.0.0",
+  "use_case": "customer-support",
+  "industry": "ecommerce",
+  "region": "us",
+  "data_sensitivity": ["PCI", "PII", "Order_Data", "Payment_Info"],
+  "guardrails": [
+    {
+      "id": "prompt_injection_detector_v1",
+      "enabled": true,
+      "description": "Blocks manipulation attempts",
+      "threshold": 0.9,
+      "action": "block"
+    },
+    {
+      "id": "pci_compliance_v1",
+      "enabled": true,
+      "description": "Prevents payment information exposure",
+      "threshold": 0.9,
+      "action": "block"
+    },
+    {
+      "id": "scam_link_detector_v1",
+      "enabled": true,
+      "description": "Detects and blocks phishing/malicious links",
+      "threshold": 0.8,
+      "action": "block"
+    },
+    {
+      "id": "pii_detector_v1",
+      "enabled": true,
+      "description": "Prevents PII leakage",
+      "threshold": 0.9,
+      "action": "block"
+    }
+  ],
+  "compliance_frameworks": ["PCI-DSS", "GDPR", "CCPA"],
+  "system_prompt_template": "You are a helpful e-commerce customer support assistant. Help customers with product information, order status, and general inquiries. Never share payment information or process refunds directly."
+}

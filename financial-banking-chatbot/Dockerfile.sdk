@@ -1,0 +1,32 @@
+# Financial Banking Chatbot - SDK Version
+# Uses EthicalZen Proxy Client SDK for transparent gateway integration
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy root package files for SDK workspace
+COPY package*.json ./
+COPY sdk/ ./sdk/
+
+# Build and link SDK
+WORKDIR /app/sdk
+RUN npm ci
+RUN npm run build
+RUN npm link
+
+# Copy accelerator package files
+WORKDIR /app/accelerator
+COPY accelerators-internal/financial-banking-chatbot/package*.json ./
+
+# Install dependencies and link SDK
+RUN npm install
+RUN npm link @ethicalzen/sdk
+
+# Copy accelerator source code
+COPY accelerators-internal/financial-banking-chatbot/ ./
+
+EXPOSE 3000
+
+CMD ["node", "app/server-sdk.js"]
+

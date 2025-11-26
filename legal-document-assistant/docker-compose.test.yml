@@ -1,0 +1,129 @@
+# ============================================================================
+# EthicalZen Healthcare Accelerator - LOCAL BUILD TEST MODE
+# ============================================================================
+# This version builds all images locally for testing
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # Your Healthcare Application
+  # ============================================================================
+  app:
+    build: .
+    container_name: healthcare-portal
+    ports:
+      - "3000:3000"
+    environment:
+      # EthicalZen Gateway (LOCAL)
+      - ETHICALZEN_GATEWAY_URL=http://gateway:8080
+      - ETHICALZEN_API_KEY=sk-demo-public-playground-ethicalzen
+      - ETHICALZEN_CERTIFICATE_ID=${ETHICALZEN_CERTIFICATE_ID:-Legal Document Assistant Demo/legal/us/v1.0}
+      - ETHICALZEN_TENANT_ID=demo
+      
+      # Portal URLs (using actual cloud backend)
+      - ETHICALZEN_PORTAL_URL=${ETHICALZEN_PORTAL_URL:-https://ethicalzen-backend-400782183161.us-central1.run.app}
+      
+      # Your LLM Provider (BYOK) - User must provide their own API key
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - LLM_PROVIDER=${LLM_PROVIDER:-groq}
+      - LLM_MODEL=${LLM_MODEL:-llama-3.3-70b-versatile}
+      
+      # Application Settings
+      - PORT=3000
+      - NODE_ENV=development
+      - USE_CASE=patient-portal
+      - INDUSTRY=healthcare
+      - REGION=us
+      - DATA_SENSITIVITY=PHI,PII
+    depends_on:
+      gateway:
+        condition: service_healthy
+      metrics:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - healthcare-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # ACVPS Gateway (BUILD LOCALLY)
+  # ============================================================================
+  gateway:
+    build:
+      context: ../../acvps-gateway
+      dockerfile: Dockerfile
+    container_name: acvps-gateway-local
+    ports:
+      - "8080:8080"
+    environment:
+      # Portal Integration - CORRECT URL
+      - BACKEND_URL=https://ethicalzen-backend-400782183161.us-central1.run.app
+      - PORTAL_URL=https://ethicalzen-backend-400782183161.us-central1.run.app
+      - API_KEY=${ETHICALZEN_API_KEY:-sk-demo-public-playground-ethicalzen}
+      - TENANT_ID=${ETHICALZEN_TENANT_ID:-demo}
+      
+      # Gateway Settings
+      - PORT=8080
+      - MODE=cloud
+      - LOG_LEVEL=info
+      
+      # Enable contract sync
+      - SYNC_ENABLED=true
+      - SYNC_INTERVAL=60
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - healthcare-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # Metrics Service (BUILD LOCALLY)
+  # ============================================================================
+  metrics:
+    build:
+      context: ../../metrics-service
+      dockerfile: Dockerfile
+    container_name: metrics-service-local
+    ports:
+      - "9090:9090"
+    environment:
+      # Portal Integration
+      - PORTAL_URL=${ETHICALZEN_PORTAL_URL:-https://ethicalzen-backend-400782183161.us-central1.run.app}
+      - API_KEY=${ETHICALZEN_API_KEY:-sk-test-local-key}
+      - TENANT_ID=${ETHICALZEN_TENANT_ID:-demo}
+      
+      # Metrics Settings
+      - PORT=9090
+      - FORWARD_INTERVAL=60
+      - BATCH_SIZE=100
+      - DB_PATH=/data/metrics.db
+    volumes:
+      - metrics-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:9090/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - healthcare-network
+    restart: unless-stopped
+
+networks:
+  healthcare-network:
+    driver: bridge
+
+volumes:
+  metrics-data:
+

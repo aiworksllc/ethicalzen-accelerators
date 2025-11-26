@@ -1,0 +1,215 @@
+# ============================================================================
+# EthicalZen Healthcare Accelerator - PORTAL-INTEGRATED DEPLOYMENT
+# ============================================================================
+# Architecture:
+# ✅ Portal-first: Register use case in portal → Get certificate ID
+# ✅ Local enforcement: Gateway validates locally (zero latency)
+# ✅ Boot-time sync: Gateway downloads contracts/guardrails from portal
+# ✅ Evidence reporting: Metrics sends logs to portal dashboard
+# ✅ BYOK: Your LLM key, your costs
+#
+# Same architecture works in:
+# - Local development (laptop)
+# - Customer VPC (AWS/GCP/Azure)
+# - On-premises deployment
+#
+# Components:
+# - Healthcare App: Your patient portal application (you build)
+# - ACVPS Gateway: Local enforcement (pre-built Docker image)
+# - Metrics Service: Evidence reporting (pre-built Docker image)
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # Your Healthcare Application
+  # ============================================================================
+  app:
+    build: .
+    container_name: healthcare-portal
+    ports:
+      - "3000:3000"
+    environment:
+      # EthicalZen Gateway (LOCAL - enforces locally, syncs from portal)
+      - ETHICALZEN_GATEWAY_URL=http://gateway:8080
+      - ETHICALZEN_API_KEY=${ETHICALZEN_API_KEY}
+      - ETHICALZEN_CERTIFICATE_ID=${ETHICALZEN_CERTIFICATE_ID}
+      
+      # Your LLM Provider (BYOK - direct from your VPC)
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4}
+      
+      # Application Settings
+      - PORT=3000
+      - NODE_ENV=${NODE_ENV:-production}
+      - USE_CASE=${USE_CASE:-patient-portal}
+      - INDUSTRY=${INDUSTRY:-healthcare}
+      - REGION=${REGION:-us}
+      - DATA_SENSITIVITY=${DATA_SENSITIVITY:-PHI,PII}
+    depends_on:
+      gateway:
+        condition: service_healthy
+      metrics:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - healthcare-network
+    restart: unless-stopped
+    # Request Flow:
+    # 1. Client → App (port 3000)
+    # 2. App → Gateway (http://gateway:8080/api/proxy)
+    # 3. Gateway validates locally (no cloud call)
+    # 4. Gateway → Your LLM (direct, BYOK)
+    # 5. Gateway validates response
+    # 6. Gateway → Metrics (async evidence)
+    # 7. Gateway → App → Client
+
+  # ============================================================================
+  # ACVPS Gateway (Local Enforcement, Portal-Synced)
+  # ============================================================================
+  gateway:
+    image: ethicalzen/acvps-gateway:latest  # Pre-built image from Docker Hub
+    container_name: healthcare-gateway
+    ports:
+      - "8080:8080"   # Gateway API
+      - "9090:9090"   # Prometheus metrics
+    environment:
+      # Portal Integration (downloads contracts/guardrails on boot)
+      - ETHICALZEN_API_KEY=${ETHICALZEN_API_KEY}
+      - ETHICALZEN_PORTAL_URL=${ETHICALZEN_PORTAL_URL:-https://api.ethicalzen.ai}
+      - ETHICALZEN_CERTIFICATE_ID=${ETHICALZEN_CERTIFICATE_ID}
+      - ETHICALZEN_TENANT_ID=${ETHICALZEN_TENANT_ID}
+      
+      # Sync Configuration
+      - PORTAL_SYNC_ON_BOOT=true
+      - PORTAL_SYNC_INTERVAL=300    # Re-sync every 5 minutes
+      - WEBHOOK_ENABLED=true         # Support instant updates via webhook
+      
+      # Gateway Settings
+      - LOG_LEVEL=info
+      - MULTI_TENANT=false
+      - CACHE_DIR=/var/ethicalzen/cache
+      
+      # Blockchain & Redis disabled (not needed)
+      - BLOCKCHAIN_ENABLED=false
+      - CACHE_ENABLED=false
+    volumes:
+      - gateway-cache:/var/ethicalzen
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - healthcare-network
+    restart: unless-stopped
+    # On Boot:
+    # 1. Read ETHICALZEN_API_KEY + CERTIFICATE_ID from env
+    # 2. Call portal: GET /api/gateway/sync?certificate_id=...
+    # 3. Download contracts + guardrails
+    # 4. Store in /var/ethicalzen/cache
+    # 5. Load into memory
+    # 6. Start validating requests locally (zero cloud calls)
+    # 7. Re-sync every 5 minutes (or via webhook)
+
+  # ============================================================================
+  # Metrics & Evidence Service (Portal-Reporting)
+  # ============================================================================
+  metrics:
+    image: ethicalzen/metrics-service:latest  # Pre-built image from Docker Hub
+    container_name: healthcare-metrics
+    ports:
+      - "4001:4001"   # Metrics API
+      - "3001:3001"   # Dashboard UI (optional local view)
+    environment:
+      # Portal Integration (reports evidence to dashboard)
+      - ETHICALZEN_API_KEY=${ETHICALZEN_API_KEY}
+      - ETHICALZEN_PORTAL_URL=${ETHICALZEN_PORTAL_URL:-https://api.ethicalzen.ai}
+      - ETHICALZEN_TENANT_ID=${ETHICALZEN_TENANT_ID}
+      - ETHICALZEN_CERTIFICATE_ID=${ETHICALZEN_CERTIFICATE_ID}
+      
+      # Reporting Configuration
+      - REPORT_TO_PORTAL=true
+      - REPORT_INTERVAL=60          # Send evidence every 60 seconds
+      - BATCH_SIZE=100               # Batch up to 100 events
+      
+      # Local Storage (also keep local copy)
+      - STORAGE_TYPE=file
+      - STORAGE_PATH=/var/metrics
+      - RETENTION_DAYS=${RETENTION_DAYS:-90}
+      
+      # Service Settings
+      - PORT=4001
+      - DASHBOARD_PORT=3001
+      - LOG_LEVEL=info
+    volumes:
+      - metrics-data:/var/metrics
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - healthcare-network
+    restart: unless-stopped
+    # On Boot:
+    # 1. Read ETHICALZEN_API_KEY + TENANT_ID from env
+    # 2. Register with portal
+    # 3. Start accepting evidence from gateway
+    # 4. Store locally to /var/metrics (backup)
+    # 5. Report to portal every 60s (async)
+    # 6. Portal updates dashboard in real-time
+
+# ============================================================================
+# Volumes (Persistent Storage)
+# ============================================================================
+volumes:
+  gateway-cache:
+    driver: local
+    # Stores: contracts, guardrail configs
+    
+  metrics-data:
+    driver: local
+    # Stores: request traces, violations, audit logs
+
+# ============================================================================
+# Network (Isolated)
+# ============================================================================
+networks:
+  healthcare-network:
+    driver: bridge
+    # All services communicate on isolated network
+    # No external network access required for operation
+
+# ============================================================================
+# Usage:
+# ============================================================================
+# 1. Start everything:
+#    docker-compose -f docker-compose.local.yml up -d
+#
+# 2. View logs:
+#    docker-compose -f docker-compose.local.yml logs -f
+#
+# 3. Access services:
+#    - Healthcare App: http://localhost:3000
+#    - Metrics Dashboard: http://localhost:3001
+#    - Gateway Metrics: http://localhost:9090/metrics
+#
+# 4. Stop everything:
+#    docker-compose -f docker-compose.local.yml down
+#
+# 5. Clean volumes (reset data):
+#    docker-compose -f docker-compose.local.yml down -v
+# ============================================================================
+

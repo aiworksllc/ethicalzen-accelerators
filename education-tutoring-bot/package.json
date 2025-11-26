@@ -1,0 +1,20 @@
+{
+  "name": "@ethicalzen/accelerator-education-tutor",
+  "version": "1.0.0",
+  "description": "FERPA-compliant education tutor with EthicalZen guardrails",
+  "main": "app/server.js",
+  "scripts": {
+    "start": "node app/server.js"
+  },
+  "keywords": ["education", "tutoring", "ferpa", "ai-safety", "ethicalzen"],
+  "author": "EthicalZen",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "axios": "^1.6.0",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5"
+  }
+}

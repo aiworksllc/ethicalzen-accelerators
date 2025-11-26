@@ -1,16 +1,19 @@
-# Dependencies
-node_modules/
-package-lock.json
-
 # Environment files with secrets
 .env
+.env.local
+.env.test
+.env.production
 
-# Docker
-.docker/
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
 
 # IDE
-.vscode/
 .idea/
+.vscode/
 *.swp
 *.swo
 
@@ -25,10 +28,5 @@ npm-debug.log*
 # Test coverage
 coverage/
 
-# Build outputs
-dist/
-build/
-
-# Temporary files
-*.tmp
-*.temp
+# Docker volumes
+data/
