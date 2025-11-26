@@ -10,7 +10,7 @@ services:
       - "3002:3000"
     environment:
       - ETHICALZEN_GATEWAY_URL=http://gateway:8080
-      - ETHICALZEN_CERTIFICATE_ID=${ETHICALZEN_CERTIFICATE_ID:-legal-sdk-test/legal/us/v1.0}
+      - ETHICALZEN_CERTIFICATE_ID=${ETHICALZEN_CERTIFICATE_ID:-Legal Document Assistant/legal/us/v1.0}
       - ETHICALZEN_TENANT_ID=${ETHICALZEN_TENANT_ID:-demo}
       - ETHICALZEN_API_KEY=${ETHICALZEN_API_KEY:-sk-demo-public-playground-ethicalzen}
       - GROQ_API_KEY=${GROQ_API_KEY}
