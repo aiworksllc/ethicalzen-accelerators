@@ -162,7 +162,6 @@ curl -X POST http://localhost:3000/chat \
 
 - [EthicalZen Platform](https://ethicalzen.ai)
 - [SDK Documentation](https://www.npmjs.com/package/@ethicalzen/sdk)
-- [API Reference](https://docs.ethicalzen.ai)
 
 ---
 
