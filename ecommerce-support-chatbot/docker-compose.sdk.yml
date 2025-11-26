@@ -33,7 +33,7 @@ services:
       - ecommerce-network
 
   gateway:
-    build: ../shared/acvps-gateway
+    image: us-central1-docker.pkg.dev/ethicalzen-public-04085/ethicalzen-images/acvps-gateway:latest
     container_name: acvps-gateway-ecommerce
     ports:
       - "8084:8080"
@@ -55,7 +55,7 @@ services:
       - ecommerce-network
 
   metrics:
-    build: ../shared/metrics-service
+    image: us-central1-docker.pkg.dev/ethicalzen-public-04085/ethicalzen-images/metrics-service:latest
     container_name: metrics-service-ecommerce
     ports:
       - "9094:9090"
