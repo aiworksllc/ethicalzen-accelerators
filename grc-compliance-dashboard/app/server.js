@@ -162,6 +162,15 @@ app.get('/api/grc/evidence/:traceId', async (req, res) => {
   }
 });
 
+app.post('/api/grc/evidence', async (req, res) => {
+  try {
+    const data = await apiClient.submitEvidence(req.body);
+    res.json(data);
+  } catch (err) {
+    res.status(502).json({ error: 'Evidence submission failed', message: err.message });
+  }
+});
+
 // =============================================================================
 // Proxy Routes — Requests & Guardrails
 // =============================================================================
@@ -187,6 +196,34 @@ app.get('/api/grc/guardrails', async (req, res) => {
     } else {
       res.status(502).json({ error: 'Cloud API unreachable', message: err.message });
     }
+  }
+});
+
+// =============================================================================
+// Proxy Routes — Certificates
+// =============================================================================
+
+app.get('/api/grc/certificates', async (req, res) => {
+  try {
+    const data = await apiClient.getCertificates(req.query);
+    cacheStore.set('certificates', data);
+    res.json(data);
+  } catch (err) {
+    const cached = cacheStore.get('certificates');
+    if (cached) {
+      res.json({ ...cached, source: 'cache', stale: true });
+    } else {
+      res.status(502).json({ error: 'Cloud API unreachable', message: err.message });
+    }
+  }
+});
+
+app.get('/api/grc/certificates/:id', async (req, res) => {
+  try {
+    const data = await apiClient.getCertificateById(req.params.id);
+    res.json(data);
+  } catch (err) {
+    res.status(502).json({ error: 'Cloud API unreachable', message: err.message });
   }
 });
 
@@ -262,6 +299,15 @@ app.get('/api/grc/taxii/collections', async (req, res) => {
     res.json(data);
   } catch (err) {
     res.status(502).json({ error: 'TAXII collections failed', message: err.message });
+  }
+});
+
+app.get('/api/grc/taxii/collections/:id/manifest', async (req, res) => {
+  try {
+    const data = await apiClient.taxiiManifest(req.params.id);
+    res.json(data);
+  } catch (err) {
+    res.status(502).json({ error: 'TAXII manifest failed', message: err.message });
   }
 });
 

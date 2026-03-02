@@ -133,6 +133,22 @@ class ApiClient {
     return this.request('get', `${routes.taxiiObjects}/${collectionId}/objects/`, params);
   }
 
+  async taxiiManifest(collectionId) {
+    return this.request('get', `${routes.taxiiManifest}/${collectionId}/manifest/`);
+  }
+
+  async getCertificates(params = {}) {
+    return this.request('get', routes.certificates, params);
+  }
+
+  async getCertificateById(id) {
+    return this.request('get', `${routes.certificates}/${id}`);
+  }
+
+  async submitEvidence(body) {
+    return this.request('post', routes.evidence, body);
+  }
+
   async testConnection() {
     try {
       const start = Date.now();

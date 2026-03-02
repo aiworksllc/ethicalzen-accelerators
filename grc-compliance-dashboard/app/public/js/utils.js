@@ -43,10 +43,22 @@ const Utils = {
 
   statusBadge(status) {
     const s = (status || '').toLowerCase();
-    if (s === 'blocked' || s === 'block') return '<span class="badge badge-blocked">Blocked</span>';
-    if (s === 'allowed' || s === 'allow') return '<span class="badge badge-allowed">Allowed</span>';
-    if (s === 'review') return '<span class="badge badge-review">Review</span>';
-    return `<span class="badge badge-info">${status || 'Unknown'}</span>`;
+    if (s === 'blocked' || s === 'block' || s === 'denied' || s === 'rejected') {
+      return '<span class="badge badge-blocked">Blocked</span>';
+    }
+    if (s === 'allowed' || s === 'allow' || s === 'passed' || s === 'approved' || s === 'success') {
+      return '<span class="badge badge-allowed">Allowed</span>';
+    }
+    if (s === 'review' || s === 'pending' || s === 'flagged') {
+      return '<span class="badge badge-review">Review</span>';
+    }
+    if (s === 'error' || s === 'failed' || s === 'failure') {
+      return '<span class="badge badge-error">Error</span>';
+    }
+    if (s === 'unknown' || s === '' || !status) {
+      return '<span class="badge badge-warning">Unknown</span>';
+    }
+    return `<span class="badge badge-info">${status}</span>`;
   },
 
   scoreBar(score) {

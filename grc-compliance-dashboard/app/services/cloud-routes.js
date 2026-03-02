@@ -14,7 +14,9 @@ module.exports = {
   driftStatus:      process.env.CLOUD_PATH_DRIFT            || '/api/ops/metrics',
   exportOscal:      process.env.CLOUD_PATH_OSCAL            || '/api/dc/evidence',
   exportStix:       process.env.CLOUD_PATH_STIX             || '/api/dc/evidence',
-  taxiiDiscovery:   process.env.CLOUD_PATH_TAXII_DISCOVERY  || '/api/guardrails/public',
-  taxiiCollections: process.env.CLOUD_PATH_TAXII_COLLECTIONS || '/api/guardrails/list',
-  taxiiObjects:     process.env.CLOUD_PATH_TAXII_OBJECTS    || '/api/guardrails',
+  taxiiDiscovery:   process.env.CLOUD_PATH_TAXII_DISCOVERY  || '/api/v2/grc/export/ethicalzen/',
+  taxiiCollections: process.env.CLOUD_PATH_TAXII_COLLECTIONS || '/api/v2/grc/export/ethicalzen/collections/',
+  taxiiObjects:     process.env.CLOUD_PATH_TAXII_OBJECTS    || '/api/v2/grc/export/ethicalzen/collections',
+  taxiiManifest:    process.env.CLOUD_PATH_TAXII_MANIFEST   || '/api/v2/grc/export/ethicalzen/collections',
+  certificates:     process.env.CLOUD_PATH_CERTIFICATES     || '/api/certificates',
 };

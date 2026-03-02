@@ -85,6 +85,9 @@
 .badge-allowed { background: rgba(16, 185, 129, 0.1); color: var(--success); }
 .badge-review { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
 .badge-info { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+.badge-error { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+.badge-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+.badge-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
 
 .badge-risk-low { background: rgba(16, 185, 129, 0.1); color: var(--risk-low); }
 .badge-risk-moderate { background: rgba(245, 158, 11, 0.1); color: var(--risk-moderate); }

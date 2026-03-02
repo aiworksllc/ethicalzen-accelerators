@@ -51,6 +51,7 @@ const App = {
       dashboard: 'Executive Dashboard',
       violations: 'Violations',
       compliance: 'Compliance Matrix',
+      certificates: 'Compliance Certificates',
       exports: 'Export Builder',
       taxii: 'TAXII Browser',
       risk: 'Risk Overview',

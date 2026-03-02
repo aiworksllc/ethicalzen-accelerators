@@ -47,16 +47,22 @@ const API = {
   violations(params) { return this.get('/violations', params); },
   evidence(params) { return this.get('/evidence', params); },
   evidenceById(traceId) { return this.get(`/evidence/${traceId}`); },
+  submitEvidence(body) { return this.post('/evidence', body); },
   requests(params) { return this.get('/requests', params); },
   guardrails() { return this.get('/guardrails'); },
   driftStatus() { return this.get('/drift-status'); },
   risk() { return this.get('/risk'); },
+
+  // Certificates
+  certificates(params) { return this.get('/certificates', params); },
+  certificateById(id) { return this.get(`/certificates/${id}`); },
 
   exportOscal(body) { return this.post('/export/oscal', body); },
   exportStix(body) { return this.post('/export/stix', body); },
 
   taxiiDiscovery() { return this.get('/taxii/discovery'); },
   taxiiCollections() { return this.get('/taxii/collections'); },
+  taxiiManifest(id) { return this.get(`/taxii/collections/${id}/manifest`); },
   taxiiObjects(id, params) { return this.get(`/taxii/collections/${id}/objects`, params); },
 
   cacheStatus() { return this.get('/cache/status'); },
